@@ -1,0 +1,14 @@
+{
+  "name": "@jcyao/qoder-wechat-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Qoder plugin shell for @jcyao/qoder-wechat-bridge",
+  "scripts": {
+    "install:local": "npm install --cache \"$HOME/.cache/qwb-npm\" --no-fund --no-audit",
+    "validate": "qodercli plugins validate ."
+  },
+  "dependencies": {
+    "@jcyao/qoder-wechat-bridge": "file:../qoder-wechat-bridge"
+  }
+}

@@ -4,13 +4,13 @@ description: 诊断微信桥接常见问题（node、qodercli、进程、token�
 
 # /qoder-wechat:doctor
 
-按顺序检查，每项给出结论（正常 / 异常 + 原因 + 修复命令）：
+按顺序检查，每项给出结论（正常 / 异常 + 原因 + 修复命令）。**先判断系统**：Windows 用 PowerShell 的 `Get-CimInstance` / `Get-Content` / `Select-String`，不要用 `pgrep` / `tail` / `grep`；启动器用 `bin\qwb.cmd`。
 
 1. **Node 版本**：`node -v`，必须 ≥ 20。低于 20 时提示用 `n 22` 或安装更新版本。
 2. **Qoder CLI**：`qodercli --version`；若报 `Not logged in`，提示用户执行 `qodercli login` 浏览器授权。
-3. **桥接配置**：`bash "${QODER_PLUGIN_ROOT}/bin/qwb" status`，看 token 与授权账号是否为空。
-4. **进程单实例**：`pgrep -fl "dist/cli.js run"`；多于 1 个说明在抢游标，需保留一个。
-5. **日志错误**：`grep -E '"(error|warn)"' "$HOME/.local/state/qoder-wechat-bridge/logs/bridge-$(date +%F).jsonl" | tail -10`。
+3. **桥接配置**：`<qwb> status`（macOS/Linux 用 `bash bin/qwb`，Windows 用 `bin\qwb.cmd`），看 token 与授权账号是否为空。
+4. **进程单实例**：macOS/Linux `pgrep -fl "dist/cli.js run"`；Windows `Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*dist/cli.js run*" }`。多于 1 个说明在抢游标，需保留一个。
+5. **日志错误**：macOS/Linux `grep -E '"(error|warn)"' "$HOME/.local/state/qoder-wechat-bridge/logs/bridge-$(date +%F).jsonl" | tail -10`；Windows 用 `Select-String -Pattern '"error"|"warn"' -Path "$env:USERPROFILE\.local\state\qoder-wechat-bridge\logs\bridge-$(Get-Date -Format yyyy-MM-dd).jsonl" | Select-Object -Last 10`。
 
 常见错误对照：
 

@@ -9,17 +9,23 @@ description: 管理本机「微信 ↔ Qoder」桥接服务。当用户说微信
 
 ## 调用方式
 
-优先使用插件自带的启动器：
+先判断系统，再选启动器（下文用 `<qwb>` 代指）：
+
+- **macOS / Linux**：`bash "${QODER_PLUGIN_ROOT}/bin/qwb"`
+- **Windows**：`"%QODER_PLUGIN_ROOT%\bin\qwb.cmd"`
+
+`QODER_PLUGIN_ROOT` 未设置时，依次尝试：
 
 ```bash
-bash "${QODER_PLUGIN_ROOT}/bin/qwb" <command>
+node "../qoder-wechat-bridge/dist/cli.js"          # 本地开发（Windows 用 ..\qoder-wechat-bridge\dist\cli.js）
+npx -y @jcyao/qoder-wechat-bridge                  # 已发布
 ```
 
-若 `QODER_PLUGIN_ROOT` 未设置：
+Windows 下的进程与日志检查用 PowerShell，不要用 `pgrep`/`tail`/`grep`：
 
-```bash
-node "../qoder-wechat-bridge/dist/cli.js" <command>   # 本地开发
-npx -y @jcyao/qoder-wechat-bridge <command>           # 已发布
+```powershell
+Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*dist/cli.js run*" }
+Get-Content "$env:USERPROFILE\.local\state\qoder-wechat-bridge\logs\bridge-$(Get-Date -Format yyyy-MM-dd).jsonl" -Tail 20
 ```
 
 ## 可用命令
@@ -29,14 +35,30 @@ npx -y @jcyao/qoder-wechat-bridge <command>           # 已发布
 | `status` | 查看 token、授权账号、工作目录、模型、会话与补发队列 |
 | `login` | 扫码登录微信（会输出二维码，需要用户手机确认） |
 | `notify "内容"` | 主动推送提醒；窗口不可用时自动排队，下次入站补发 |
+| `send-file <路径> [--text "文案"]` | 把图片/文件/视频发到微信（≤10MB，文案与媒体分两条） |
+| ~~`send-voice`~~ | **不要使用**：客户端不渲染出站语音；需要音频请用 `send-file` 发文件 |
 | `run` | 启动常驻桥接进程（前台运行，不要阻塞式调用） |
+
+## 给用户发文件
+
+任务产物需要发回微信时（截图、图表、报告、压缩包）：
+
+```bash
+<qwb> send-file /absolute/path/to/file.png --text "生成好了"
+```
+
+（Windows 路径用 `C:\...`，启动器换成 `bin\qwb.cmd`。）
+
+- 图片（png/jpg/gif/webp）会直接在聊天里显示；其它类型作为文件发送；mp4/mov 作为视频。
+- 单文件 ≤ 10MB；文案与媒体各占一条下行额度。
+- 依赖最近一次入站留下的 `context_token`；没有窗口时会直接报错，先用文字回一句再发。
 
 ## 需要用户决策时
 
 任务执行中需要用户确认、或发现重要情况要通知时，执行：
 
 ```bash
-bash "${QODER_PLUGIN_ROOT}/bin/qwb" notify "需要你确认：是否覆盖已有分支？"
+<qwb> notify "需要你确认：是否覆盖已有分支？"
 ```
 
 注意：推送依赖 `context_token`（约 24h 窗口）。返回"已排队"说明窗口不可用，提醒会在用户下次发消息时补发，不要重复调用。

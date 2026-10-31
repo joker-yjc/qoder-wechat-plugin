@@ -10,11 +10,12 @@ model: auto
 
 ## 统一入口
 
-```bash
-QWB="${QODER_PLUGIN_ROOT}/bin/qwb"
-```
+先判断系统，再选启动器：
 
-- `QODER_PLUGIN_ROOT` 未设置时，用 `command -v qoder-wechat`
+- **macOS / Linux**：`QWB="${QODER_PLUGIN_ROOT}/bin/qwb"`，用 `bash "$QWB" <命令>`
+- **Windows**：用 `"%QODER_PLUGIN_ROOT%\bin\qwb.cmd" <命令>`
+
+- `QODER_PLUGIN_ROOT` 未设置时，用 `command -v qoder-wechat`（Windows 用 `where qoder-wechat`）
 - 两者都没有时，用 `npx -y @jcyao/qoder-wechat-bridge`
 
 后续所有桥接命令都通过这个入口执行，不要自己拼 dist 路径。
@@ -120,6 +121,33 @@ bash "$QWB" status
 | `Not logged in` | `qodercli login` |
 | `-14` | 微信会话过期，重新执行第 4 步 |
 | `getupdates 返回错误` 持续 | 换号后游标残留，删除 `~/.local/state/qoder-wechat-bridge/state.json` 再启动 |
+
+## Windows 分支
+
+Windows 没有 `nohup` / `pgrep` / `open`，第 4、5 步改用 PowerShell：
+
+```powershell
+$dir = "$env:USERPROFILE\.local\state\qoder-wechat-bridge"
+New-Item -ItemType Directory -Force $dir | Out-Null
+$QWB = "$env:QODER_PLUGIN_ROOT\bin\qwb.cmd"
+
+# 后台登录
+Start-Process -FilePath "cmd.exe" -ArgumentList "/c","`"$QWB`" login > `"$dir\login.log`" 2>&1" -WindowStyle Hidden
+Start-Sleep 5
+Start-Process "$dir\wechat-qr.png"
+
+# 看日志 / 写校验码
+Get-Content "$dir\login.log" -Tail 20
+Set-Content -Path "$dir\verify-code.txt" -Value "<数字>" -NoNewline
+
+# 后台启动服务并检查
+Start-Process -FilePath "cmd.exe" -ArgumentList "/c","`"$QWB`" run > `"$dir\run.log`" 2>&1" -WindowStyle Hidden
+Start-Sleep 5
+Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*dist/cli.js run*" }
+Get-Content "$dir\run.log" -Tail 5
+```
+
+注意：Windows 上没有 `say` / `afconvert`，`send-voice` 不可用（该功能本身也是实验性）；其余命令一致。
 
 ## 禁止事项
 

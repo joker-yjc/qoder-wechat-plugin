@@ -37,6 +37,8 @@ Get-Content "$env:USERPROFILE\.local\state\qoder-wechat-bridge\logs\bridge-$(Get
 | `notify "内容"` | 主动推送提醒；窗口不可用时自动排队，下次入站补发 |
 | `send-file <路径> [--text "文案"]` | 把图片/文件/视频发到微信（≤10MB，文案与媒体分两条） |
 | ~~`send-voice`~~ | **不要使用**：客户端不渲染出站语音；需要音频请用 `send-file` 发文件 |
+
+微信用户侧内置命令：`/help`、`/status`、`/model`、`/reset`、`/stop`（停止当前任务，`/cancel` 同义）。
 | `run` | 启动常驻桥接进程（前台运行，不要阻塞式调用） |
 
 ## 给用户发文件

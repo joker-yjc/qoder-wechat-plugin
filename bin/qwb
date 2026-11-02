@@ -1,6 +1,6 @@
 #!/bin/bash
 # qwb：转发到 qoder-wechat-bridge 的命令启动器
-# 解析顺序：插件自带依赖 -> 同级本地仓库（开发） -> npm 线上包
+# 解析顺序：插件自带依赖 -> 全局安装 -> npm 线上包
 set -euo pipefail
 
 ROOT="${QODER_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
@@ -10,16 +10,10 @@ if [ -x "$ROOT/node_modules/.bin/qoder-wechat" ]; then
   exec "$ROOT/node_modules/.bin/qoder-wechat" "$@"
 fi
 
-# 2) 本地开发：同级的桥接仓库
-LOCAL="$ROOT/../qoder-wechat-bridge/dist/cli.js"
-if [ -f "$LOCAL" ]; then
-  exec node "$LOCAL" "$@"
-fi
-
-# 3) 全局安装的桥接包
+# 2) 全局安装的桥接包
 if command -v qoder-wechat >/dev/null 2>&1; then
   exec qoder-wechat "$@"
 fi
 
-# 4) 线上包
+# 3) 线上包
 exec npx -y @jcyao/qoder-wechat-bridge "$@"

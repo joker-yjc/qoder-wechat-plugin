@@ -116,7 +116,7 @@ bash "$QWB" status
 
 | 现象 | 处理 |
 |---|---|
-| `sdk_worker_removed` | 从 Qoder 桌面终端启动导致，改用系统「终端」或让本包自动剥离环境变量 |
+| sdk_worker_removed | 桥接版本过旧、未剥离继承的 `QODER_*`：升级 @jcyao/qoder-wechat-bridge 到最新版，或改用系统「终端」启动 |
 | `SyntaxError: Invalid regular expression flags` | Node 仍是 16，切到 ≥ 20 |
 | `Not logged in` | `qodercli login` |
 | `-14` | 微信会话过期，重新执行第 4 步 |

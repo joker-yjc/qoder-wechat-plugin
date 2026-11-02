@@ -4,11 +4,21 @@
   "private": true,
   "type": "module",
   "description": "Qoder plugin shell for @jcyao/qoder-wechat-bridge",
+  "license": "MIT",
+  "author": "joke_yao",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joker-yjc/qoder-wechat-plugin.git"
+  },
+  "homepage": "https://github.com/joker-yjc/qoder-wechat-plugin#readme",
+  "bugs": {
+    "url": "https://github.com/joker-yjc/qoder-wechat-plugin/issues"
+  },
   "scripts": {
-    "install:local": "npm install --cache \"$HOME/.cache/qwb-npm\" --no-fund --no-audit",
+    "install:bridge": "npm install --cache \"$HOME/.cache/qwb-npm\" --no-fund --no-audit",
     "validate": "qodercli plugins validate ."
   },
   "dependencies": {
-    "@jcyao/qoder-wechat-bridge": "file:../qoder-wechat-bridge"
+    "@jcyao/qoder-wechat-bridge": "^0.1.0"
   }
 }

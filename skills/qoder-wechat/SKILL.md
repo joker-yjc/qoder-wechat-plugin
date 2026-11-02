@@ -14,12 +14,7 @@ description: 管理本机「微信 ↔ Qoder」桥接服务。当用户说微信
 - **macOS / Linux**：`bash "${QODER_PLUGIN_ROOT}/bin/qwb"`
 - **Windows**：`"%QODER_PLUGIN_ROOT%\bin\qwb.cmd"`
 
-`QODER_PLUGIN_ROOT` 未设置时，依次尝试：
-
-```bash
-node "../qoder-wechat-bridge/dist/cli.js"          # 本地开发（Windows 用 ..\qoder-wechat-bridge\dist\cli.js）
-npx -y @jcyao/qoder-wechat-bridge                  # 已发布
-```
+`QODER_PLUGIN_ROOT` 未设置时，依次尝试全局安装的 `qoder-wechat`（Windows 用 `where qoder-wechat`），都没有则用 `npx -y @jcyao/qoder-wechat-bridge`。
 
 Windows 下的进程与日志检查用 PowerShell，不要用 `pgrep`/`tail`/`grep`：
 
@@ -34,12 +29,13 @@ Get-Content "$env:USERPROFILE\.local\state\qoder-wechat-bridge\logs\bridge-$(Get
 |---|---|
 | `status` | 查看 token、授权账号、工作目录、模型、会话与补发队列 |
 | `login` | 扫码登录微信（会输出二维码，需要用户手机确认） |
+| `run` | 启动常驻桥接进程（前台运行，不要阻塞式调用） |
 | `notify "内容"` | 主动推送提醒；窗口不可用时自动排队，下次入站补发 |
 | `send-file <路径> [--text "文案"]` | 把图片/文件/视频发到微信（≤10MB，文案与媒体分两条） |
+| `clean [--all]` | 清理入站附件（默认只删 7 天前的） |
 | ~~`send-voice`~~ | **不要使用**：客户端不渲染出站语音；需要音频请用 `send-file` 发文件 |
 
 微信用户侧内置命令：`/help`、`/status`、`/model`、`/reset`、`/stop`（停止当前任务，`/cancel` 同义）。
-| `run` | 启动常驻桥接进程（前台运行，不要阻塞式调用） |
 
 ## 给用户发文件
 

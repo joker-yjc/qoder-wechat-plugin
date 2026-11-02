@@ -3,7 +3,8 @@
 Qoder 插件薄壳：在 Qoder 里查看、诊断、启动本机的「微信 ↔ Qoder」桥接服务。
 
 **它不实现微信通道。** 真正的收发、会话映射、额度控制都在独立进程
-[`@jcyao/qoder-wechat-bridge`](https://www.npmjs.com/package/@jcyao/qoder-wechat-bridge) 里。
+[`@jcyao/qoder-wechat-bridge`](https://www.npmjs.com/package/@jcyao/qoder-wechat-bridge)
+（[源码](https://github.com/joker-yjc/qoder-wechat-bridge)）里。
 本插件只负责让 Qoder 的 agent 知道怎么操作它。
 
 ## 为什么不做 MCP
@@ -23,7 +24,8 @@ Qoder 插件薄壳：在 Qoder 里查看、诊断、启动本机的「微信 ↔
 ```
 .qoder-plugin/plugin.json        # 插件清单
 agents/qoder-wechat-setup.md     # 一键安装 Agent（含完整 runbook 与禁止事项）
-bin/qwb                          # 命令启动器：插件依赖 → 本地仓库 → 全局 → npx
+bin/qwb                          # 命令启动器：插件依赖 → 全局 → npx
+bin/qwb.cmd                      # Windows 版启动器，解析顺序同上
 skills/qoder-wechat/SKILL.md     # 运维知识：何时用、诊断顺序、禁止操作
 commands/setup.md                # /qoder-wechat:setup
 commands/status.md               # /qoder-wechat:status
@@ -32,24 +34,19 @@ commands/doctor.md               # /qoder-wechat:doctor
 
 ## 依赖与版本
 
-`package.json` 里现在是本地依赖，方便联调：
+插件只依赖 npm 上的 `@jcyao/qoder-wechat-bridge`，`package.json` 里声明为 `^0.1.0`；
+桥接包要求 **Node ≥ 20** 和一个已登录的 Qoder CLI。
 
-```json
-"@jcyao/qoder-wechat-bridge": "file:../qoder-wechat-bridge"
+`bin/qwb` 的解析顺序是「插件自带依赖 → 全局安装的 `qoder-wechat` → `npx` 线上包」，三种装法都能跑：
+
+```bash
+npm run install:bridge                  # 装进插件目录的 node_modules
+npm i -g @jcyao/qoder-wechat-bridge     # 或全局安装
+                                        # 都不装 → 首次调用走 npx 拉线上包
 ```
 
-桥接包发布到 npm 后，改成版本号即可：
-
-```json
-"@jcyao/qoder-wechat-bridge": "^0.1.0"
-```
-
-`bin/qwb` 的解析顺序是「插件自带依赖 → 同级本地仓库 → 全局安装的 `qoder-wechat` → `npx` 线上包」，
-所以两种模式都能跑。
-
-> 本地联调时注意：Qoder 安装插件时只复制插件文件，**不会复制 `node_modules`**。
-> 所以要么先 `npm i -g ../qoder-wechat-bridge`（本地包全局安装），
-> 要么等桥接包发布后用 `npx` 兜底。
+> 分发时注意：Qoder 安装插件时只复制插件文件，**不会复制 `node_modules`**。
+> 所以别人装完插件后，要么全局安装桥接包，要么让 `npx` 首次自动拉取。
 
 ## 安装
 
@@ -63,6 +60,7 @@ qodercli plugins validate .
 
 安装后在 Qoder 里可以用：
 
+- `/qoder-wechat:setup` — 引导式安装：检查环境、装包、扫码、启动、验证
 - `/qoder-wechat:status` — 账号、目录、模型、会话、补发队列
 - `/qoder-wechat:doctor` — 按顺序诊断 node / qodercli / 进程 / token / 日志
 
@@ -71,3 +69,7 @@ qodercli plugins validate .
 - 没有入站推送：插件不能"微信来消息自动唤醒 Qoder"。
 - 同一 token 只能有一个消费者；桥接进程在跑时不要再启动第二个。
 - 扫码登录需要手机确认，属于人工步骤。
+
+## 许可
+
+MIT，见 [LICENSE](LICENSE)。

@@ -16,7 +16,7 @@ description: 诊断微信桥接常见问题（node、qodercli、进程、token�
 
 | 现象 | 原因 | 处理 |
 |---|---|---|
-| `sdk_worker_removed` | 继承了 `QODER_*` 环境变量 | 用 `启动桥接.command` 从 Finder 启动，或确认桥接版本已剥离环境变量 |
+| `sdk_worker_removed` | 桥接版本过旧，未剥离继承的 `QODER_*` | 升级到 ≥ 0.1.0（已在 spawn qodercli 前剥离 `QODER_*`，仅补回 `QODER_MEMORY_HEADLESS`）；或改从系统终端启动 |
 | `SyntaxError: Invalid regular expression flags` | node 是 16 | `n 22` |
 | `Not logged in · Please run /login` | qodercli 未登录 | `qodercli login` |
 | `ret=-2` | context_token 过期或下行额度耗尽 | 结果会进补发队列，下次入站重试 |

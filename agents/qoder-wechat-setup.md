@@ -36,17 +36,17 @@ qodercli -p -o json "只回复OK"   # 是否已登录
 
 ### 2. 安装桥接包
 
-```bash
-bash "$QWB" --version        # 已安装会输出版本号
-```
-
-装不上时：
+判据是**有没有全局命令**，不是"能不能跑起来"：`bash "$QWB" --version` 在什么都没装的机器上也会成功（它会落到 `npx -y` 在线拉包），用它判断会永远以为已安装。
 
 ```bash
-npm i -g @jcyao/qoder-wechat-bridge
+command -v qoder-wechat >/dev/null 2>&1 && qoder-wechat --version    # Windows 用 where qoder-wechat
 ```
 
-失败就原样展示错误，不要擅自换镜像源或猜原因。
+- 找到了：已安装，进第 3 步。
+- 没找到：执行 `npm i -g @jcyao/qoder-wechat-bridge`，装完再判一次。
+- 装失败（无网络、权限不足等）：**告知后继续，不要卡在这一步**——告诉用户"现在先用在线方式跑，每次启动都要联网、首次会比较慢；等网络可用后重新执行本步骤，就能装成常驻命令"，然后接着做第 3 步。
+
+安装报错时原样展示错误，不要擅自换镜像源或猜原因。
 
 ### 3. 判断是否已登录
 
@@ -61,7 +61,7 @@ bash "$QWB" status
 先确认没有服务在跑：
 
 ```bash
-pgrep -fl "dist/cli.js run"
+pgrep -fl "qoder-wechat run|cli\.js run"
 ```
 
 有的话告诉用户"已有服务在运行，换绑前需要先停止"，征得同意后停止。
@@ -92,7 +92,7 @@ ls -l "$HOME/.local/state/qoder-wechat-bridge/wechat-qr.png"
 ```bash
 nohup bash "$QWB" run > "$HOME/.local/state/qoder-wechat-bridge/run.log" 2>&1 &
 sleep 5
-pgrep -fl "dist/cli.js run"
+pgrep -fl "qoder-wechat run|cli\.js run"
 tail -5 "$HOME/.local/state/qoder-wechat-bridge/run.log"
 ```
 
@@ -143,7 +143,7 @@ Set-Content -Path "$dir\verify-code.txt" -Value "<数字>" -NoNewline
 # 后台启动服务并检查
 Start-Process -FilePath "cmd.exe" -ArgumentList "/c","`"$QWB`" run > `"$dir\run.log`" 2>&1" -WindowStyle Hidden
 Start-Sleep 5
-Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*dist/cli.js run*" }
+Get-CimInstance Win32_Process | Where-Object { $_.Name -eq "node.exe" -and $_.CommandLine -like "*qoder-wechat*" -and $_.CommandLine -like "*run*" }
 Get-Content "$dir\run.log" -Tail 5
 ```
 

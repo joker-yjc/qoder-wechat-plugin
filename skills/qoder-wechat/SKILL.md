@@ -19,7 +19,7 @@ description: 管理本机「微信 ↔ Qoder」桥接服务。当用户说微信
 Windows 下的进程与日志检查用 PowerShell，不要用 `pgrep`/`tail`/`grep`：
 
 ```powershell
-Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*dist/cli.js run*" }
+Get-CimInstance Win32_Process | Where-Object { $_.Name -eq "node.exe" -and $_.CommandLine -like "*qoder-wechat*" -and $_.CommandLine -like "*run*" }
 Get-Content "$env:USERPROFILE\.local\state\qoder-wechat-bridge\logs\bridge-$(Get-Date -Format yyyy-MM-dd).jsonl" -Tail 20
 ```
 
@@ -72,7 +72,7 @@ Get-Content "$env:USERPROFILE\.local\state\qoder-wechat-bridge\logs\bridge-$(Get
 
 1. `status` 看 token 是否已配置、授权账号是否为空。
 2. `node -v` 必须 ≥ 20；`qodercli --version` 必须可用且已登录。
-3. 进程是否在跑：`pgrep -fl "dist/cli.js run"`。
+3. 进程是否在跑：`pgrep -fl "qoder-wechat run|cli\.js run"`。
 4. 日志：`~/.local/state/qoder-wechat-bridge/logs/bridge-$(date +%F).jsonl`。
 
 ## 禁止事项

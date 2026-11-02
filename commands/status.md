@@ -22,13 +22,13 @@ rem Windows
 
 ```bash
 # macOS / Linux
-pgrep -fl "dist/cli.js run" || echo "未运行"
+pgrep -fl "qoder-wechat run|cli\.js run" || echo "未运行"
 tail -5 "$HOME/.local/state/qoder-wechat-bridge/logs/bridge-$(date +%F).jsonl" 2>/dev/null
 ```
 
 ```powershell
 # Windows
-Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*dist/cli.js run*" }
+Get-CimInstance Win32_Process | Where-Object { $_.Name -eq "node.exe" -and $_.CommandLine -like "*qoder-wechat*" -and $_.CommandLine -like "*run*" }
 Get-Content "$env:USERPROFILE\.local\state\qoder-wechat-bridge\logs\bridge-$(Get-Date -Format yyyy-MM-dd).jsonl" -Tail 5
 ```
 

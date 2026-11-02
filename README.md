@@ -119,7 +119,7 @@ launchctl bootout gui/$(id -u)/com.example.qoder-wechat-bridge   # 停止并取�
 - **`PATH` 不能省。** launchd 给进程的默认 PATH 里没有 `/usr/local/bin`，桥接进程会因为找不到 `qodercli` 而起不来。把 `command -v qodercli` 所在目录写进上面的 `PATH`（Apple Silicon 上常是 `/opt/homebrew/bin`）。
 - `WorkingDirectory` 填你的家目录（`echo $HOME`），与桥接配置里的工作目录保持一致，否则相对路径产物会落到别处。
 - 触发时机是**用户登录**，不是开机。停在登录界面、或 FileVault 还没解锁时，服务不跑。
-- 托管之后不要再手动 `run`，会和托管实例抢 `get_updates` 游标；`kill` 也没用，`ThrottleInterval` 秒内就被拉起，要停只能 `bootout`。
+- 托管之后不要再手动 `run`，会和托管实例抢 `get_updates` 游标；也不要 `kill`——会被拉起。要停就执行 `qoder-wechat stop`，它识别出 launchd 托管后不会发信号，而是打印出可直接执行的 `launchctl bootout …` 命令。
 - 升级桥接包（`npm update -g @jcyao/qoder-wechat-bridge`）不用改 plist，路径不变。
 
 **Windows**：用「任务计划程序」建一个登录时触发的任务，命令指向全局安装生成的 `qoder-wechat.cmd run`；

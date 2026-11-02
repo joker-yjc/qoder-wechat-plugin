@@ -30,6 +30,7 @@ Get-Content "$env:USERPROFILE\.local\state\qoder-wechat-bridge\logs\bridge-$(Get
 | `status` | 查看 token、授权账号、工作目录、模型、会话与补发队列 |
 | `login` | 扫码登录微信（会输出二维码，需要用户手机确认） |
 | `run` | 启动常驻桥接进程（前台运行，不要阻塞式调用） |
+| `stop` | 停止**整个桥接服务**；被 launchd 托管时不发信号，只打印 `launchctl bootout` 命令。别与微信里的 `/stop`（只停当前任务）混淆 |
 | `notify "内容"` | 主动推送提醒；窗口不可用时自动排队，下次入站补发 |
 | `send-file <路径> [--text "文案"]` | 把图片/文件/视频发到微信（≤10MB，文案与媒体分两条） |
 | `clean [--all]` | 清理入站附件（默认只删 7 天前的） |
@@ -81,5 +82,5 @@ Get-Content "$env:USERPROFILE\.local\state\qoder-wechat-bridge\logs\bridge-$(Get
 - 不要打印或回显 `config.json` 里的 token。
 - 不要为了"试试"反复执行 `login`（会触发风控）。
 - 在已有桥接进程运行时，不要再次 `run`。
-- 进程若已由 LaunchAgent / 任务计划程序托管：不要 `kill`（`ThrottleInterval` 内会被自动拉起），也不要再 `run`（抢游标）。停止走 `launchctl bootout gui/<uid>/<label>`，查看走 `launchctl print`。
+- 停止一律用 `stop`，不要自己 `kill`：被 LaunchAgent 托管时 `kill` 会在 `ThrottleInterval` 内被重新拉起，中断更难排查。`stop` 会自己识别托管关系，只把 `launchctl bootout gui/<uid>/<label>` 打印出来交给你执行；它发信号后最多等 10 秒，超时就再执行一次 `stop`（第二次信号立即结束）。
 - 不要把本插件描述成"MCP 工具"或"实时推送"——它是命令行薄壳，实时性由常驻进程决定。

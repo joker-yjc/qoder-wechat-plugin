@@ -20,6 +20,6 @@
     "pack": "bash scripts/pack.sh"
   },
   "dependencies": {
-    "@jcyao/qoder-wechat-bridge": "^0.1.0"
+    "@jcyao/qoder-wechat-bridge": "^0.1.1"
   }
 }

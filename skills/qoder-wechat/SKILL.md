@@ -67,6 +67,7 @@ Get-Content "$env:USERPROFILE\.local\state\qoder-wechat-bridge\logs\bridge-$(Get
 - 桥接进程与 Qoder Desktop 会话是两套东西：会话在 CLI 侧，桌面 GUI 历史里看不到。
 - 官方 iLink 通道**只支持单聊**，且单条入站约 10 条下行额度、`context_token` 约 24h 时效。
 - 同一 token 只能有一个消费者，重复启动会抢 `get_updates` 游标。
+- 服务默认**不自启**：`run` 是前台进程，重启电脑或关掉它的终端后，微信就不再收到回复了。要常驻得自己配 LaunchAgent / 任务计划程序（见 README「开机自启」）。用户说"昨天还好好的，今天不回"时，先问机器是否重启过、再看进程是否在跑。
 
 ## 诊断顺序
 
@@ -80,4 +81,5 @@ Get-Content "$env:USERPROFILE\.local\state\qoder-wechat-bridge\logs\bridge-$(Get
 - 不要打印或回显 `config.json` 里的 token。
 - 不要为了"试试"反复执行 `login`（会触发风控）。
 - 在已有桥接进程运行时，不要再次 `run`。
+- 进程若已由 LaunchAgent / 任务计划程序托管：不要 `kill`（`ThrottleInterval` 内会被自动拉起），也不要再 `run`（抢游标）。停止走 `launchctl bootout gui/<uid>/<label>`，查看走 `launchctl print`。
 - 不要把本插件描述成"MCP 工具"或"实时推送"——它是命令行薄壳，实时性由常驻进程决定。

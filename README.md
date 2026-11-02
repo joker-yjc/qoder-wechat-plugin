@@ -65,6 +65,66 @@ qodercli plugins validate .
 - `/qoder-wechat:status` — 账号、目录、模型、会话、补发队列
 - `/qoder-wechat:doctor` — 按顺序诊断 node / qodercli / 进程 / token / 日志
 
+## 开机自启
+
+桥接进程默认**不会自启**。`run` 是前台进程：重启电脑、关掉运行它的终端、或者进程被杀掉之后，
+微信那边就不再回复了。想让它常驻，交给系统自带的服务管理器——插件和桥接包都不代管这件事。
+
+**macOS（用户级 LaunchAgent）**
+
+存成 `~/Library/LaunchAgents/com.example.qoder-wechat-bridge.plist`，
+其中 `/usr/local/bin/qoder-wechat` 换成 `command -v qoder-wechat` 的实际输出（必须是全局安装的那份，不要指向 npx）：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.example.qoder-wechat-bridge</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/qoder-wechat</string>
+    <string>run</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+  <key>WorkingDirectory</key>
+  <string>/Users/yourname</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>30</integer>
+  <key>StandardOutPath</key>
+  <string>/tmp/qoder-wechat-bridge.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/qoder-wechat-bridge.err.log</string>
+</dict>
+</plist>
+```
+
+```bash
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.example.qoder-wechat-bridge.plist
+launchctl print gui/$(id -u)/com.example.qoder-wechat-bridge    # 查状态
+launchctl bootout gui/$(id -u)/com.example.qoder-wechat-bridge   # 停止并取消自启
+```
+
+五点必须知道：
+
+- **`PATH` 不能省。** launchd 给进程的默认 PATH 里没有 `/usr/local/bin`，桥接进程会因为找不到 `qodercli` 而起不来。把 `command -v qodercli` 所在目录写进上面的 `PATH`（Apple Silicon 上常是 `/opt/homebrew/bin`）。
+- `WorkingDirectory` 填你的家目录（`echo $HOME`），与桥接配置里的工作目录保持一致，否则相对路径产物会落到别处。
+- 触发时机是**用户登录**，不是开机。停在登录界面、或 FileVault 还没解锁时，服务不跑。
+- 托管之后不要再手动 `run`，会和托管实例抢 `get_updates` 游标；`kill` 也没用，`ThrottleInterval` 秒内就被拉起，要停只能 `bootout`。
+- 升级桥接包（`npm update -g @jcyao/qoder-wechat-bridge`）不用改 plist，路径不变。
+
+**Windows**：用「任务计划程序」建一个登录时触发的任务，命令指向全局安装生成的 `qoder-wechat.cmd run`；
+想更贴近服务语义就用 NSSM 之类把它注册成 Windows 服务。
+
 ## 打包发布
 
 ```bash

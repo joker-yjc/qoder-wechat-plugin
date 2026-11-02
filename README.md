@@ -26,6 +26,7 @@ Qoder 插件薄壳：在 Qoder 里查看、诊断、启动本机的「微信 ↔
 agents/qoder-wechat-setup.md     # 一键安装 Agent（含完整 runbook 与禁止事项）
 bin/qwb                          # 命令启动器：插件依赖 → 全局 → npx
 bin/qwb.cmd                      # Windows 版启动器，解析顺序同上
+scripts/pack.sh                  # 打包发布用 zip（npm run pack）
 skills/qoder-wechat/SKILL.md     # 运维知识：何时用、诊断顺序、禁止操作
 commands/setup.md                # /qoder-wechat:setup
 commands/status.md               # /qoder-wechat:status
@@ -63,6 +64,20 @@ qodercli plugins validate .
 - `/qoder-wechat:setup` — 引导式安装：检查环境、装包、扫码、启动、验证
 - `/qoder-wechat:status` — 账号、目录、模型、会话、补发队列
 - `/qoder-wechat:doctor` — 按顺序诊断 node / qodercli / 进程 / token / 日志
+
+## 打包发布
+
+```bash
+npm run pack        # → dist/qoder-wechat-<version>.zip，并打印条目数、大小、sha256
+```
+
+打包清单以 git 为准（`git ls-files --cached --others --exclude-standard`），所以 `node_modules`、`dist/`
+和被 `.gitignore` 忽略的内容不会进包；脚本还会校验 zip 根目录存在 `.qoder-plugin/plugin.json`。
+文件名取自 `.qoder-plugin/plugin.json` 的 `name` + `version`，发新版前先改 `version`，并让 GitHub tag 与它一致。
+
+拿到 zip 后两条分发路：拖进 GitHub Release 当 asset（直链可直接 `qodercli plugins install <URL>`），
+或提交到 Qoder 官方市场。**不要用 tag 自动生成的源码包**——它会把仓库套在一层目录里，
+违反「zip 根目录即插件根目录」，装不上。
 
 ## 限制
 

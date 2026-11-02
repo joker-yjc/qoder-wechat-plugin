@@ -16,7 +16,8 @@
   },
   "scripts": {
     "install:bridge": "npm install --cache \"$HOME/.cache/qwb-npm\" --no-fund --no-audit",
-    "validate": "qodercli plugins validate ."
+    "validate": "qodercli plugins validate .",
+    "pack": "bash scripts/pack.sh"
   },
   "dependencies": {
     "@jcyao/qoder-wechat-bridge": "^0.1.0"

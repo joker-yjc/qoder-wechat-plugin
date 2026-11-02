@@ -51,12 +51,22 @@ npm i -g @jcyao/qoder-wechat-bridge     # 或全局安装
 
 ## 安装
 
-```bash
-# 本地目录
-qodercli plugins install .
+**从 GitHub Release 装**（实测可用，不需要克隆仓库）：
 
-# 或先校验
-qodercli plugins validate .
+```bash
+qodercli plugins install https://github.com/joker-yjc/qoder-wechat-plugin/releases/download/v0.1.0/qoder-wechat-0.1.0.zip
+```
+
+这条 URL 永久有效：它会 302 跳到 GitHub 的签名临时地址，CLI 自动跟随。装别的版本时，
+把 URL 里的 `v0.1.0` 和文件名一起换掉即可。
+
+**Qoder Desktop**：Extensions → Plugins → Add Plugins → **Upload Plugin**，选同一个 zip。
+
+**本地开发**（改动还没发布时）：
+
+```bash
+qodercli plugins validate .    # 先校验
+qodercli plugins install .     # 再从目录安装
 ```
 
 安装后在 Qoder 里可以用：

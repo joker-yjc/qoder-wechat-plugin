@@ -27,7 +27,7 @@ Get-Content "$env:USERPROFILE\.local\state\qoder-wechat-bridge\logs\bridge-$(Get
 
 | 命令 | 作用 |
 |---|---|
-| `status` | 查看 token、授权账号、工作目录、模型、会话与补发队列 |
+| `status` | 查看 token、授权账号、工作目录、模型、会话、待补发队列、隔离区与下行额度 |
 | `login` | 扫码登录微信（会输出二维码，需要用户手机确认） |
 | `run` | 启动常驻桥接进程（前台运行，不要阻塞式调用） |
 | `stop` | 停止**整个桥接服务**；被 launchd 托管时不发信号，只打印 `launchctl bootout` 命令。别与微信里的 `/stop`（只停当前任务）混淆 |
@@ -67,6 +67,7 @@ Get-Content "$env:USERPROFILE\.local\state\qoder-wechat-bridge\logs\bridge-$(Get
 - 消息链路：微信 → 桥接进程（长轮询）→ `qodercli -p` → 回传微信。
 - 桥接进程与 Qoder Desktop 会话是两套东西：会话在 CLI 侧，桌面 GUI 历史里看不到。
 - 官方 iLink 通道**只支持单聊**，且单条入站约 10 条下行额度、`context_token` 约 24h 时效。
+- 出站有队列：待补发默认 200 条 / 24 小时，超限丢最旧；连续 3 次永久失败的消息移入隔离区（默认 500 条 / 7 天），不再自动送达，后续消息照常发送。
 - 同一 token 只能有一个消费者，重复启动会抢 `get_updates` 游标。
 - 服务默认**不自启**：`run` 是前台进程，重启电脑或关掉它的终端后，微信就不再收到回复了。要常驻得自己配 LaunchAgent / 任务计划程序（见 README「开机自启」）。用户说"昨天还好好的，今天不回"时，先问机器是否重启过、再看进程是否在跑。
 
@@ -75,7 +76,7 @@ Get-Content "$env:USERPROFILE\.local\state\qoder-wechat-bridge\logs\bridge-$(Get
 1. `status` 看 token 是否已配置、授权账号是否为空。
 2. `node -v` 必须 ≥ 20；`qodercli --version` 必须可用且已登录。
 3. 进程是否在跑：`pgrep -fl "qoder-wechat run|cli\.js run"`。
-4. 日志：`~/.local/state/qoder-wechat-bridge/logs/bridge-$(date +%F).jsonl`。
+4. 日志：`~/.local/state/qoder-wechat-bridge/logs/bridge-$(date +%F).jsonl`；qodercli 失败的完整输出在同级 `logs/diagnostics/YYYY-MM-DD/`（保留 7 天）。
 
 ## 禁止事项
 

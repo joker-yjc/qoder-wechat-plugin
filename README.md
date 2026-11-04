@@ -35,16 +35,21 @@ commands/doctor.md               # /qoder-wechat:doctor
 
 ## 依赖与版本
 
-插件只依赖 npm 上的 `@jcyao/qoder-wechat-bridge`，`package.json` 里声明为 `^0.1.0`；
-桥接包要求 **Node ≥ 20** 和一个已登录的 Qoder CLI。
+插件只依赖 npm 上的 `@jcyao/qoder-wechat-bridge`，`package.json` 里**不锁版本**（声明为 `*`），
+装到的始终是线上最新的那一版；桥接包要求 **Node ≥ 20** 和一个已登录的 Qoder CLI。
+本插件只是命令行薄壳，命令语义跟着桥接包走，所以不需要跟着桥接包一起发版。
 
 `bin/qwb` 的解析顺序是「插件自带依赖 → 全局安装的 `qoder-wechat` → `npx` 线上包」，三种装法都能跑：
 
 ```bash
-npm run install:bridge                  # 装进插件目录的 node_modules
+npm run install:bridge                  # 装进插件目录的 node_modules（装完是当时的最新版）
 npm i -g @jcyao/qoder-wechat-bridge     # 或全局安装
                                         # 都不装 → 首次调用走 npx 拉线上包
 ```
+
+`bash bin/qwb --version` 看当前生效的是哪一版（Windows 用 `bin\qwb.cmd --version`）。
+插件目录里已经装过桥接包时，它会盖住全局那份；想让插件用上新版，重新
+`npm update @jcyao/qoder-wechat-bridge` 或删掉插件目录的 `node_modules`。
 
 > 分发时注意：Qoder 安装插件时只复制插件文件，**不会复制 `node_modules`**。
 > 所以别人装完插件后，要么全局安装桥接包，要么让 `npx` 首次自动拉取。
@@ -54,11 +59,12 @@ npm i -g @jcyao/qoder-wechat-bridge     # 或全局安装
 **从 GitHub Release 装**（实测可用，不需要克隆仓库）：
 
 ```bash
-qodercli plugins install https://github.com/joker-yjc/qoder-wechat-plugin/releases/download/v0.1.0/qoder-wechat-0.1.0.zip
+qodercli plugins install https://github.com/joker-yjc/qoder-wechat-plugin/releases/download/v0.1.1/qoder-wechat-0.1.1.zip
 ```
 
-这条 URL 永久有效：它会 302 跳到 GitHub 的签名临时地址，CLI 自动跟随。装别的版本时，
-把 URL 里的 `v0.1.0` 和文件名一起换掉即可。
+这条 URL 永久有效：它会 302 跳到 GitHub 的签名临时地址，CLI 自动跟随。装别的版本时，把 URL 里的
+tag 和文件名一起换掉——两者都由版本号生成（`v<版本>` 与 `qoder-wechat-<版本>.zip`），最新版永远看
+[Releases](https://github.com/joker-yjc/qoder-wechat-plugin/releases) 页面。
 
 **Qoder Desktop**：Extensions → Plugins → Add Plugins → **Upload Plugin**，选同一个 zip。
 
@@ -144,6 +150,7 @@ npm run pack        # → dist/qoder-wechat-<version>.zip，并打印条目数�
 打包清单以 git 为准（`git ls-files --cached --others --exclude-standard`），所以 `node_modules`、`dist/`
 和被 `.gitignore` 忽略的内容不会进包；脚本还会校验 zip 根目录存在 `.qoder-plugin/plugin.json`。
 文件名取自 `.qoder-plugin/plugin.json` 的 `name` + `version`，发新版前先改 `version`，并让 GitHub tag 与它一致。
+`npm version` 只会同步 `package.json` 和 lockfile，**不会动 `.qoder-plugin/plugin.json`**，两处版本号要一起改。
 
 拿到 zip 后两条分发路：拖进 GitHub Release 当 asset（直链可直接 `qodercli plugins install <URL>`），
 或提交到 Qoder 官方市场。**不要用 tag 自动生成的源码包**——它会把仓库套在一层目录里，

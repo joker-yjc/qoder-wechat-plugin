@@ -1,6 +1,6 @@
 {
   "name": "@jcyao/qoder-wechat-plugin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "description": "Qoder plugin shell for @jcyao/qoder-wechat-bridge",
@@ -20,6 +20,6 @@
     "pack": "bash scripts/pack.sh"
   },
   "dependencies": {
-    "@jcyao/qoder-wechat-bridge": "^0.1.1"
+    "@jcyao/qoder-wechat-bridge": "*"
   }
 }

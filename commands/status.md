@@ -1,5 +1,5 @@
 ---
-description: 查看微信桥接状态（账号、目录、模型、会话、补发队列）
+description: 查看微信桥接状态（账号、目录、模型、会话、补发队列、隔离区）
 ---
 
 # /qoder-wechat:status
@@ -32,6 +32,7 @@ Get-CimInstance Win32_Process | Where-Object { $_.Name -eq "node.exe" -and $_.Co
 Get-Content "$env:USERPROFILE\.local\state\qoder-wechat-bridge\logs\bridge-$(Get-Date -Format yyyy-MM-dd).jsonl" -Tail 5
 ```
 
-3. 用中文汇总：是否已登录、授权账号、工作目录、当前模型、会话数、待补发条数、进程状态、最近一条日志。
+3. 用中文汇总：是否已登录、授权账号、工作目录、当前模型、会话数、待补发条数、隔离区条数、下行额度是否正常、进程状态、最近一条日志。
+   待补发或隔离区不为 0 时，顺带说明：待补发会在下一次收到微信消息时补发；隔离区是连续失败后被搁置的消息，不会自动送达。
 
 **不要回显 token 内容。** 如果状态里 token 显示为"未配置"，提示用户执行 `/qoder-wechat:setup` 完成扫码登录。

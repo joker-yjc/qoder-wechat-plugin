@@ -36,7 +36,7 @@ Get-Content "$env:USERPROFILE\.local\state\qoder-wechat-bridge\logs\bridge-$(Get
 | `clean [--all]` | 清理入站附件（默认只删 7 天前的） |
 | ~~`send-voice`~~ | **不要使用**：客户端不渲染出站语音；需要音频请用 `send-file` 发文件 |
 
-微信用户侧内置命令：`/help`、`/status`、`/model`、`/reset`、`/stop`（停止当前任务，`/cancel` 同义）。
+微信用户侧内置命令：`/help`、`/status`、`/model`、`/reset`、`/stop`（停止当前任务，`/cancel` 同义）、`/sessions`（列会话）、`/switch <序号|id|名称>`（切换会话）、`/new [名称]`（开新会话）、`/rename <名称>`（重命名当前会话）、`/delete <序号|id|名称>`（删除会话，需再发 `/delete yes <序号>` 确认）。`/switch`、`/new`、`/rename`、`/delete` 在任务执行中会被拒绝，需先 `/stop`。
 
 ## 给用户发文件
 

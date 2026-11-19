@@ -19,12 +19,30 @@ Qoder 插件薄壳：在 Qoder 里查看、诊断、启动本机的「微信 ↔
 
 **运维：用命令。** `/qoder-wechat:status` 看状态，`/qoder-wechat:doctor` 按顺序诊断。
 
+## 后端：国际版 / CN
+
+桥接包 0.6.0 起同时支持国际版 `qodercli` 与 CN 版 `qoderclicn`（或 dispatcher `qodercn`），
+切换只改 `qoderBin` 一个配置项（`config.json` / `QWB_QODER_BIN` / `run --qoder-bin`）。
+记忆开关、配置目录覆盖变量、自定义模型来源、会话存储与登录凭据都按后端分叉，桥接自己处理。
+
+插件这边不需要额外配置：`status` 与 `doctor` 会先读 `qoderBin` 再决定查哪个 CLI，
+`setup` Agent 按已有配置的后端走（没有配置时默认国际版，不主动推销 CN）。
+
+两个容易踩的点：
+
+- bin 名必须是 `qodercli` / `qoderclicn` / `qodercn` 之一，或指向它们的绝对路径。
+  自定义 wrapper、改名软链会**静默回落国际版画像**，CN 记忆开关就设错了。
+- CN 凭据独立于国际版，装完要单独 `qoderclicn login`；桌面端数据迁移不等于 CLI 已登录。
+  CN CLI 的 scope 是 `@qodercn-ai`，npm 上的 `@qoder-ai/qoderclicn@0.0.1` 疑似抢注包，勿装。
+
+细节见 `skills/qoder-wechat/SKILL.md` 的「后端」节。
+
 ## 目录
 
 ```
 .qoder-plugin/plugin.json        # 插件清单
 agents/qoder-wechat-setup.md     # 一键安装 Agent（含完整 runbook 与禁止事项）
-bin/qwb                          # 命令启动器：插件依赖 → 全局 → npx
+bin/qwb                          # 命令启动器：全局 → 插件依赖 → npx
 bin/qwb.cmd                      # Windows 版启动器，解析顺序同上
 scripts/pack.sh                  # 打包发布用 zip（npm run pack）
 skills/qoder-wechat/SKILL.md     # 运维知识：何时用、诊断顺序、禁止操作
@@ -39,27 +57,37 @@ commands/doctor.md               # /qoder-wechat:doctor
 装到的始终是线上最新的那一版；桥接包要求 **Node ≥ 20** 和一个已登录的 Qoder CLI。
 本插件只是命令行薄壳，命令语义跟着桥接包走，所以不需要跟着桥接包一起发版。
 
-`bin/qwb` 的解析顺序是「插件自带依赖 → 全局安装的 `qoder-wechat` → `npx` 线上包」，三种装法都能跑：
+`bin/qwb` 的解析顺序是「全局安装的 `qoder-wechat` → 插件自带依赖 → `npx` 线上包」，三种装法都能跑：
 
 ```bash
-npm run install:bridge                  # 装进插件目录的 node_modules（装完是当时的最新版）
-npm i -g @jcyao/qoder-wechat-bridge     # 或全局安装
+npm i -g @jcyao/qoder-wechat-bridge     # 全局安装（推荐，常驻进程用的就是这份）
+npm run install:bridge                  # 或装进插件目录的 node_modules（装完是当时的最新版）
                                         # 都不装 → 首次调用走 npx 拉线上包
 ```
 
+**全局优先是刻意的**：常驻进程（launchd / 任务计划程序）跑的就是全局那份，`stop` / `status`
+的锁与运行记录语义必须与守护进程同版本，旧版 CLI 会误判实例状态。后端画像也是 0.6.0 才有的：
+更早的版本虽然认 `qoderBin`、会照样拉起 `qoderclicn`，但记忆开关与配置目录硬写国际版
+（`QODER_MEMORY_HEADLESS` / `~/.qoder`），结果是 CN 长期记忆静默失效、`/model` 的自定义模型列表读错目录。
+
 `bash bin/qwb --version` 看当前生效的是哪一版（Windows 用 `bin\qwb.cmd --version`）。
-插件目录里已经装过桥接包时，它会盖住全局那份；想让插件用上新版，重新
-`npm update @jcyao/qoder-wechat-bridge` 或删掉插件目录的 `node_modules`。
+没有全局安装时才会落到插件目录那份；此时想升级用 `npm update @jcyao/qoder-wechat-bridge`，
+或删掉插件目录的 `node_modules`。两处都装了且版本不同，以全局为准。
 
 > 分发时注意：Qoder 安装插件时只复制插件文件，**不会复制 `node_modules`**。
 > 所以别人装完插件后，要么全局安装桥接包，要么让 `npx` 首次自动拉取。
 
 ## 安装
 
+**先选对 CLI**：插件装到哪个后端，就在哪个后端里生效。国际版用 `qodercli`（装进 `~/.qoder/plugins`），
+CN 版用 `qoderclicn`（装进 `~/.qoder-cn/plugins`）。**两者互不可见**——在 Qoder CN 里要用 CN CLI 装，
+反之亦然。下文命令里的 `qodercli` 按你的后端替换。
+
 **从 GitHub Release 装**（实测可用，不需要克隆仓库）：
 
 ```bash
 qodercli plugins install https://github.com/joker-yjc/qoder-wechat-plugin/releases/download/v0.1.1/qoder-wechat-0.1.1.zip
+# CN 版把 qodercli 换成 qoderclicn，URL 不变
 ```
 
 这条 URL 永久有效：它会 302 跳到 GitHub 的签名临时地址，CLI 自动跟随。装别的版本时，把 URL 里的
@@ -71,7 +99,7 @@ tag 和文件名一起换掉——两者都由版本号生成（`v<版本>` 与 
 **本地开发**（改动还没发布时）：
 
 ```bash
-qodercli plugins validate .    # 先校验
+qodercli plugins validate .    # 先校验（CN 用 qoderclicn，两个后端都能校验）
 qodercli plugins install .     # 再从目录安装
 ```
 
@@ -79,7 +107,7 @@ qodercli plugins install .     # 再从目录安装
 
 - `/qoder-wechat:setup` — 引导式安装：检查环境、装包、扫码、启动、验证
 - `/qoder-wechat:status` — 账号、目录、模型、会话、补发队列
-- `/qoder-wechat:doctor` — 按顺序诊断 node / qodercli / 进程 / token / 日志
+- `/qoder-wechat:doctor` — 按顺序诊断 node / 桥接版本与后端 / Qoder CLI / 进程与锁 / token / 日志
 
 ## 开机自启
 
@@ -130,13 +158,24 @@ launchctl print gui/$(id -u)/com.example.qoder-wechat-bridge    # 查状态
 launchctl bootout gui/$(id -u)/com.example.qoder-wechat-bridge   # 停止并取消自启
 ```
 
-五点必须知道：
+六点必须知道：
 
 - **`PATH` 不能省。** launchd 给进程的默认 PATH 里没有 `/usr/local/bin`，桥接进程会因为找不到 `qodercli` 而起不来。把 `command -v qodercli` 所在目录写进上面的 `PATH`（Apple Silicon 上常是 `/opt/homebrew/bin`）。
 - `WorkingDirectory` 填你的家目录（`echo $HOME`），与桥接配置里的工作目录保持一致，否则相对路径产物会落到别处。
 - 触发时机是**用户登录**，不是开机。停在登录界面、或 FileVault 还没解锁时，服务不跑。
-- 托管之后不要再手动 `run`，会和托管实例抢 `get_updates` 游标；也不要 `kill`——会被拉起。要停就执行 `qoder-wechat stop`，它识别出 launchd 托管后不会发信号，而是打印出可直接执行的 `launchctl bootout …` 命令。
+- 托管之后不要再手动 `run`：0.4.0 起有双锁互斥，会直接拒绝启动并打印对方 pid（这是保护不是故障）；也不要 `kill`——会被拉起。要停就执行 `qoder-wechat stop`，它识别出 launchd 托管后不会发信号，而是打印出可直接执行的 `launchctl bootout …` 命令，并以**退出码 2** 表示"仍在运行、需要你手动执行"。
 - 升级桥接包（`npm update -g @jcyao/qoder-wechat-bridge`）不用改 plist，路径不变。
+- **要接 CN 后端**，在 `EnvironmentVariables` 里加 `QWB_QODER_BIN`，并**用绝对路径**（理由同 `PATH`：按名调用可能 ENOENT，用 `which qoderclicn` 查实际路径）。改完要 `bootout` 再 `bootstrap` 才生效：
+
+```xml
+<key>EnvironmentVariables</key>
+<dict>
+  <key>PATH</key>
+  <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  <key>QWB_QODER_BIN</key>
+  <string>/usr/local/bin/qoderclicn</string>
+</dict>
+```
 
 **Windows**：用「任务计划程序」建一个登录时触发的任务，命令指向全局安装生成的 `qoder-wechat.cmd run`；
 想更贴近服务语义就用 NSSM 之类把它注册成 Windows 服务。

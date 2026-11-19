@@ -1,18 +1,20 @@
 #!/bin/bash
 # qwb：转发到 qoder-wechat-bridge 的命令启动器
-# 解析顺序：插件自带依赖 -> 全局安装 -> npm 线上包
+# 解析顺序：全局安装 -> 插件自带依赖 -> npm 线上包
+# 全局优先是刻意的：常驻进程（launchd/任务计划）跑的就是全局那份，
+# stop/status 的锁与运行记录语义必须与守护进程同版本，否则旧 CLI 会误判。
 set -euo pipefail
 
 ROOT="${QODER_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
 
-# 1) 插件依赖（npm install 后存在）
-if [ -x "$ROOT/node_modules/.bin/qoder-wechat" ]; then
-  exec "$ROOT/node_modules/.bin/qoder-wechat" "$@"
-fi
-
-# 2) 全局安装的桥接包
+# 1) 全局安装的桥接包
 if command -v qoder-wechat >/dev/null 2>&1; then
   exec qoder-wechat "$@"
+fi
+
+# 2) 插件依赖（npm run install:bridge 后存在）
+if [ -x "$ROOT/node_modules/.bin/qoder-wechat" ]; then
+  exec "$ROOT/node_modules/.bin/qoder-wechat" "$@"
 fi
 
 # 3) 线上包

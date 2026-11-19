@@ -1,8 +1,8 @@
 {
   "name": "qoder-wechat",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "displayName": "Qoder WeChat",
-  "description": "把个人微信单聊接到 Qoder 的运维入口：查看桥接状态、诊断启动问题、扫码重新登录。依赖 @jcyao/qoder-wechat-bridge。",
+  "description": "把个人微信单聊接到 Qoder 的运维入口：查看桥接状态、诊断启动问题、扫码重新登录。支持国际版 qodercli 与 CN 版 qoderclicn 后端。依赖 @jcyao/qoder-wechat-bridge。",
   "author": {
     "name": "joke_yao"
   },
